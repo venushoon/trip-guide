@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MBTI 스마트 여행 가이드</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: Serene Sky -->
+    <!-- Application Structure Plan: The application is designed as a single-page, multi-step "wizard" to guide the user seamlessly through the process. This structure was chosen for its clarity and user-friendliness, breaking down the complex task of planning a trip into simple, manageable stages: 1. Welcome, 2. MBTI Quiz, 3. Travel Preferences, 4. Loading/Results. This linear flow minimizes user confusion, ensures all necessary data is collected before generating a recommendation, and creates an engaging, interactive experience. Each step is a distinct section that is shown or hidden via JavaScript, maintaining the single-page application feel. -->
+    <!-- Visualization & Content Choices: 
+        - Report Info: MBTI Analysis -> Goal: Organize/Inform -> Viz/Method: Interactive form with radio buttons and a progress bar. -> Interaction: User selects one of two options for each question. The progress bar updates dynamically. -> Justification: This is the most intuitive way to present a forced-choice questionnaire, providing clear feedback on progress. -> Library/Method: HTML/CSS/JS.
+        - Report Info: Travel Preferences -> Goal: Inform/Organize -> Viz/Method: Standard form elements (text input, selects, radio groups). -> Interaction: User inputs text and selects options. -> Justification: Standard form controls are universally understood and efficient for data collection. Icons are added for visual appeal. -> Library/Method: HTML/CSS/JS.
+        - Report Info: Travel Itinerary -> Goal: Inform -> Viz/Method: Dynamically generated text content within styled cards. -> Interaction: The content appears after a simulated API call. -> Justification: The output is primarily text-based. Structuring it in day-by-day cards makes the itinerary easy to read and digest. No complex visualization is needed. -> Library/Method: HTML/JS.
+    -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body { font-family: 'Noto Sans KR', sans-serif; }
+        .step-transition { transition: opacity 0.5s ease-in-out, transform 0.5s ease-in-out; }
+        .step-hidden { opacity: 0; transform: translateY(20px); position: absolute; pointer-events: none; }
+        .step-visible { opacity: 1; transform: translateY(0); position: relative; }
+        .option-card {
+            border: 2px solid #e5e7eb;
+            transition: all 0.2s ease-in-out;
+        }
+        .option-card:hover {
+            border-color: #3b82f6;
+            transform: translateY(-2px);
+        }
+        .option-card.selected {
+            border-color: #3b82f6;
+            background-color: #eff6ff;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+        }
+        .progress-bar-fill {
+            transition: width 0.4s ease-in-out;
+        }
+        .loader {
+            border: 4px solid #f3f4f6;
+            border-top: 4px solid #3b82f6;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-800 flex items-center justify-center min-h-screen">
+    <div class="w-full max-w-2xl mx-auto bg-white rounded-2xl shadow-xl p-6 sm:p-10 my-8">
+        <div class="text-center mb-8">
+            <h1 class="text-3xl sm:text-4xl font-bold text-gray-900">✈️ MBTI 스마트 여행 가이드</h1>
+            <p class="mt-3 text-gray-600">당신의 성향에 꼭 맞는 특별한 여행을 추천해 드립니다.</p>
+        </div>
+
+        <div id="app-container" class="relative">
+            <!-- Step 1: Welcome -->
+            <div id="step-1" class="step-visible step-transition">
+                <div class="text-center p-4">
+                    <h2 class="text-2xl font-semibold text-gray-800 mb-4">나만의 여행 스타일 찾기</h2>
+                    <p class="text-gray-600 mb-8">
+                        간단한 4가지 질문으로 당신의 MBTI 성향을 파악하고,
+                        <br>상상만 했던 완벽한 여행 계획을 만들어 보세요!
+                    </p>
+                    <button onclick="changeStep(2)" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg text-lg transition-transform transform hover:scale-105">
+                        시작하기
+                    </button>
+                </div>
+            </div>
+
+            <!-- Step 2: MBTI Quiz -->
+            <div id="step-2" class="step-hidden step-transition">
+                <div class="mb-6">
+                    <div class="flex justify-between items-center mb-2">
+                        <span class="text-sm font-medium text-blue-700">MBTI 분석 중...</span>
+                        <span id="progress-text" class="text-sm font-medium text-blue-700">질문 1 / 4</span>
+                    </div>
+                    <div class="w-full bg-gray-200 rounded-full h-2.5">
+                        <div id="progress-bar" class="bg-blue-600 h-2.5 rounded-full progress-bar-fill" style="width: 25%"></div>
+                    </div>
+                </div>
+
+                <div id="quiz-container"></div>
+                
+                <div class="flex justify-between mt-8">
+                    <button onclick="prevQuestion()" id="prev-btn" class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-6 rounded-lg transition invisible">이전</button>
+                    <button onclick="nextQuestion()" id="next-btn" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded-lg transition invisible">다음</button>
+                </div>
+            </div>
+
+            <!-- Step 3: Travel Preferences -->
+            <div id="step-3" class="step-hidden step-transition">
+                <h2 class="text-2xl font-semibold text-center text-gray-800 mb-6">여행의 구체적인 그림을 그려주세요 🎨</h2>
+                <form id="prefs-form" class="space-y-6">
+                    <div>
+                        <label for="destination" class="block text-sm font-medium text-gray-700 mb-1">어디로 떠나고 싶으신가요?</label>
+                        <input type="text" id="destination" class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500" placeholder="예: 제주도, 파리, 스위스 융프라우" required>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label for="duration" class="block text-sm font-medium text-gray-700 mb-1">여행 기간</label>
+                            <select id="duration" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md">
+                                <option>1일 (당일치기)</option>
+                                <option>2일</option>
+                                <option selected>3일</option>
+                                <option>4일</option>
+                                <option>5일</option>
+                                <option>6일</option>
+                                <option>7일</option>
+                            </select>
+                        </div>
+                         <div>
+                            <label for="party-size" class="block text-sm font-medium text-gray-700 mb-1">인원 수</label>
+                            <select id="party-size" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md">
+                                <option>1명</option>
+                                <option selected>2명</option>
+                                <option>3명</option>
+                                <option>4명</option>
+                                <option>5명 이상</option>
+                            </select>
+                        </div>
+                    </div>
+
+                     <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">여행 스타일</label>
+                        <div class="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                            <div><input type="radio" name="style" id="style-relax" value="휴양" class="sr-only" checked><label for="style-relax" class="option-card p-4 rounded-lg cursor-pointer block text-center">🏖️ 휴양</label></div>
+                            <div><input type="radio" name="style" id="style-couple" value="커플여행" class="sr-only"><label for="style-couple" class="option-card p-4 rounded-lg cursor-pointer block text-center">💞 커플여행</label></div>
+                            <div><input type="radio" name="style" id="style-family" value="가족여행" class="sr-only"><label for="style-family" class="option-card p-4 rounded-lg cursor-pointer block text-center">👨‍👩‍👧‍👦 가족여행</label></div>
+                            <div><input type="radio" name="style" id="style-activity" value="액티비티" class="sr-only"><label for="style-activity" class="option-card p-4 rounded-lg cursor-pointer block text-center">🏄 액티비티</label></div>
+                            <div><input type="radio" name="style" id="style-culture" value="문화탐방" class="sr-only"><label for="style-culture" class="option-card p-4 rounded-lg cursor-pointer block text-center">🏛️ 문화탐방</label></div>
+                            <div><input type="radio" name="style" id="style-food" value="맛집탐방" class="sr-only"><label for="style-food" class="option-card p-4 rounded-lg cursor-pointer block text-center">🍜 맛집탐방</label></div>
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">예산 규모 (1인당)</label>
+                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div><input type="radio" name="budget" id="budget-1m" value="100만원" class="sr-only" checked><label for="budget-1m" class="option-card p-4 rounded-lg cursor-pointer block text-center">💰 100만원</label></div>
+                            <div><input type="radio" name="budget" id="budget-2m" value="200만원" class="sr-only"><label for="budget-2m" class="option-card p-4 rounded-lg cursor-pointer block text-center">💸 200만원</label></div>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg text-lg transition-transform transform hover:scale-105">
+                        나만의 여행 경로 추천받기
+                    </button>
+                </form>
+            </div>
+
+            <!-- Step 4: Loading/Result -->
+            <div id="step-4" class="step-hidden step-transition">
+                 <div id="loading-view" class="text-center p-8">
+                    <div class="flex justify-center mb-4">
+                        <div class="loader"></div>
+                    </div>
+                    <h2 class="text-2xl font-semibold text-gray-800">최적의 여행 경로를 찾고 있습니다...</h2>
+                    <p class="text-gray-600 mt-2">Gemini AI가 당신의 성향을 분석하여 최고의 일정을 만들고 있어요.</p>
+                </div>
+
+                <div id="result-view" class="hidden">
+                    <div class="text-center mb-6">
+                        <h2 class="text-2xl font-bold text-gray-900">당신을 위한 맞춤 여행 플랜!</h2>
+                        <p id="result-intro" class="mt-2 text-gray-600"></p>
+                    </div>
+                    <div id="itinerary-container" class="space-y-4">
+                        <!-- Itinerary will be injected here -->
+                    </div>
+                     <button onclick="restart()" class="w-full mt-8 bg-gray-600 hover:bg-gray-700 text-white font-bold py-3 px-4 rounded-lg text-lg transition">
+                        다시하기
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentStep = 1;
+        let currentQuestionIndex = 0;
+        const userAnswers = {};
+        let userData = {};
+
+        const questions = [
+            {
+                question: "주말에 에너지를 재충전하는 당신의 방식은?",
+                options: [
+                    { text: "친구들과 만나 활기차게 시간을 보낸다", value: "E" },
+                    { text: "집에서 조용히 혼자만의 시간을 갖는다", value: "I" }
+                ],
+                key: "EI"
+            },
+            {
+                question: "여행 계획을 세울 때 당신은?",
+                options: [
+                    { text: "과거 경험과 실제 정보를 바탕으로 현실적인 계획을 세운다", value: "S" },
+                    { text: "전체적인 그림과 가능성을 상상하며 영감을 얻는다", value: "N" }
+                ],
+                key: "SN"
+            },
+            {
+                question: "친구가 고민을 털어놓을 때 당신의 반응은?",
+                options: [
+                    { text: "객관적인 사실을 바탕으로 해결책을 제시한다", value: "T" },
+                    { text: "따뜻한 공감과 위로를 먼저 건넨다", value: "F" }
+                ],
+                key: "TF"
+            },
+            {
+                question: "여행지에 도착한 첫날, 당신의 행동은?",
+                options: [
+                    { text: "미리 세워둔 계획에 따라 체계적으로 움직인다", value: "J" },
+                    { text: "즉흥적으로 마음이 이끄는 대로 자유롭게 탐험한다", value: "P" }
+                ],
+                key: "JP"
+            }
+        ];
+
+        function renderQuestion() {
+            const quizContainer = document.getElementById('quiz-container');
+            const q = questions[currentQuestionIndex];
+            quizContainer.innerHTML = `
+                <div class="text-center mb-8">
+                    <h3 class="text-xl sm:text-2xl font-medium text-gray-800">${q.question}</h3>
+                </div>
+                <div class="space-y-4">
+                    <div onclick="selectAnswer('${q.key}', '${q.options[0].value}', 0)" id="option-0" class="option-card p-4 sm:p-6 rounded-lg cursor-pointer text-center text-lg">
+                        ${q.options[0].text}
+                    </div>
+                    <div onclick="selectAnswer('${q.key}', '${q.options[1].value}', 1)" id="option-1" class="option-card p-4 sm:p-6 rounded-lg cursor-pointer text-center text-lg">
+                        ${q.options[1].text}
+                    </div>
+                </div>
+            `;
+            updateSelection();
+            updateNavigation();
+        }
+
+        function selectAnswer(key, value, optionIndex) {
+            userAnswers[key] = value;
+            document.querySelectorAll('.option-card').forEach(card => card.classList.remove('selected'));
+            document.getElementById(`option-${optionIndex}`).classList.add('selected');
+            document.getElementById('next-btn').classList.remove('invisible');
+        }
+
+        function updateSelection() {
+            const answer = userAnswers[questions[currentQuestionIndex].key];
+            if (answer) {
+                const q = questions[currentQuestionIndex];
+                const optionIndex = q.options.findIndex(opt => opt.value === answer);
+                if (optionIndex !== -1) {
+                    document.getElementById(`option-${optionIndex}`).classList.add('selected');
+                    document.getElementById('next-btn').classList.remove('invisible');
+                }
+            } else {
+                 document.getElementById('next-btn').classList.add('invisible');
+            }
+        }
+        
+        function updateProgressBar() {
+            const progress = ((currentQuestionIndex + 1) / questions.length) * 100;
+            document.getElementById('progress-bar').style.width = `${progress}%`;
+            document.getElementById('progress-text').innerText = `질문 ${currentQuestionIndex + 1} / ${questions.length}`;
+        }
+
+        function updateNavigation() {
+            document.getElementById('prev-btn').classList.toggle('invisible', currentQuestionIndex === 0);
+            if (currentQuestionIndex === questions.length - 1) {
+                document.getElementById('next-btn').innerText = '결과 확인';
+            } else {
+                document.getElementById('next-btn').innerText = '다음';
+            }
+        }
+
+        function nextQuestion() {
+            if (!userAnswers[questions[currentQuestionIndex].key]) return;
+            
+            if (currentQuestionIndex < questions.length - 1) {
+                currentQuestionIndex++;
+                renderQuestion();
+                updateProgressBar();
+            } else {
+                calculateMBTI();
+                changeStep(3);
+            }
+        }
+
+        function prevQuestion() {
+            if (currentQuestionIndex > 0) {
+                currentQuestionIndex--;
+                renderQuestion();
+                updateProgressBar();
+            }
+        }
+        
+        function calculateMBTI() {
+            userData.mbti = `${userAnswers.EI}${userAnswers.SN}${userAnswers.TF}${userAnswers.JP}`;
+        }
+
+        document.addEventListener('change', (e) => {
+            if (e.target.name === 'style' || e.target.name === 'budget') {
+                const labels = e.target.closest('.grid').querySelectorAll('label');
+                labels.forEach(label => label.classList.remove('selected'));
+                e.target.nextElementSibling.classList.add('selected');
+            }
+        });
+
+        document.getElementById('prefs-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            userData.destination = document.getElementById('destination').value;
+            userData.duration = document.getElementById('duration').value;
+            userData.partySize = document.getElementById('party-size').value;
+            userData.style = document.querySelector('input[name="style"]:checked').value;
+            userData.budget = document.querySelector('input[name="budget"]:checked').value;
+            
+            changeStep(4);
+            getRecommendation();
+        });
+
+        function getRecommendation() {
+            document.getElementById('loading-view').classList.remove('hidden');
+            document.getElementById('result-view').classList.add('hidden');
+
+            // --- Apps Script 백엔드 함수 호출 ---
+            // google.script.run은 클라이언트 측 JavaScript에서 Apps Script 서버 측 함수를 호출합니다.
+            // .withSuccessHandler()는 서버 함수가 성공적으로 실행되었을 때 호출될 콜백 함수를 지정합니다.
+            // .withFailureHandler()는 서버 함수 실행 중 오류가 발생했을 때 호출될 콜백 함수를 지정합니다.
+            google.script.run
+                .withSuccessHandler(showResult)
+                .withFailureHandler(showError)
+                .getTravelRecommendation(userData); // userData 객체를 Apps Script 함수로 전달
+        }
+
+        function showResult(result) {
+            document.getElementById('loading-view').classList.add('hidden');
+            document.getElementById('result-view').classList.remove('hidden');
+            
+            document.getElementById('result-intro').innerText = `${userData.mbti} 성향의 당신에게 딱 맞는 ${userData.destination} ${userData.duration} 여행!`;
+            
+            const itineraryContainer = document.getElementById('itinerary-container');
+            itineraryContainer.innerHTML = '';
+            
+            result.itinerary.forEach((day, index) => {
+                const dayElement = document.createElement('div');
+                dayElement.className = 'bg-gray-100 p-4 rounded-lg';
+                dayElement.innerHTML = `
+                    <h3 class="font-bold text-lg text-blue-700">Day ${index + 1}: ${day.theme}</h3>
+                    <ul class="mt-2 list-disc list-inside text-gray-700 space-y-1">
+                        ${day.activities.map(activity => `<li>${activity}</li>`).join('')}
+                    </ul>
+                    <p class="text-sm text-gray-500 mt-3">✨ <span class="font-semibold">Tip:</span> ${day.tip}</p>
+                `;
+                itineraryContainer.appendChild(dayElement);
+            });
+
+            // 추천 결과를 Google Sheet에 저장
+            const dataToSave = {
+                mbti: userData.mbti,
+                destination: userData.destination,
+                duration: userData.duration,
+                partySize: userData.partySize,
+                style: userData.style,
+                budget: userData.budget,
+                itinerary: JSON.stringify(result.itinerary) // 객체를 JSON 문자열로 변환하여 저장
+            };
+            google.script.run
+                .withFailureHandler(showError) // 저장 실패 시 에러 처리
+                .saveToSheet(dataToSave);
+        }
+
+        function showError(error) {
+            // 에러 메시지를 사용자에게 표시하는 로직 (예: 모달 팝업, 경고 메시지 등)
+            // alert() 대신 커스텀 모달이나 div에 메시지를 표시하는 것이 좋습니다.
+            console.error('Apps Script 오류:', error);
+            document.getElementById('loading-view').classList.add('hidden'); // 로딩 화면 숨기기
+            const appContainer = document.getElementById('app-container');
+            let errorDiv = document.getElementById('error-message');
+            if (!errorDiv) {
+                errorDiv = document.createElement('div');
+                errorDiv.id = 'error-message';
+                errorDiv.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50';
+                errorDiv.innerHTML = `
+                    <div class="bg-white p-6 rounded-lg shadow-lg text-center">
+                        <h3 class="text-xl font-bold text-red-600 mb-4">오류 발생!</h3>
+                        <p class="text-gray-700 mb-4">${error.message || '알 수 없는 오류가 발생했습니다.'}</p>
+                        <button onclick="document.getElementById('error-message').remove()" class="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded">확인</button>
+                    </div>
+                `;
+                document.body.appendChild(errorDiv);
+            } else {
+                errorDiv.querySelector('p').innerText = error.message || '알 수 없는 오류가 발생했습니다.';
+                errorDiv.style.display = 'flex';
+            }
+        }
+        
+        function changeStep(targetStep) {
+            const currentEl = document.getElementById(`step-${currentStep}`);
+            const targetEl = document.getElementById(`step-${targetStep}`);
+
+            currentEl.classList.add('step-hidden');
+            currentEl.classList.remove('step-visible');
+
+            targetEl.classList.remove('step-hidden');
+            targetEl.classList.add('step-visible');
+            
+            currentStep = targetStep;
+        }
+
+        function restart() {
+            currentQuestionIndex = 0;
+            for(const key in userAnswers) { delete userAnswers[key]; }
+            userData = {};
+            document.getElementById('prefs-form').reset();
+
+            // 라디오 버튼 선택 초기화
+            document.querySelectorAll('.option-card.selected').forEach(el => el.classList.remove('selected'));
+            document.querySelector('label[for="style-relax"]').classList.add('selected'); // 휴양 기본 선택
+            document.querySelector('label[for="budget-1m"]').classList.add('selected'); // 100만원 기본 선택
+
+            changeStep(1);
+            setTimeout(() => {
+                renderQuestion();
+                updateProgressBar();
+            }, 500);
+        }
+
+        // Initial render
+        window.onload = () => {
+            renderQuestion();
+            // 초기 로드 시 기본 선택된 라디오 버튼의 UI를 업데이트
+            document.querySelector('label[for="style-relax"]').classList.add('selected');
+            document.querySelector('label[for="budget-1m"]').classList.add('selected');
+        };
+
+    </script>
+</body>
+</html>
