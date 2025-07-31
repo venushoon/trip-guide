@@ -349,7 +349,12 @@
                 dayElement.innerHTML = `
                     <h3 class="font-bold text-lg text-blue-700">Day ${index + 1}: ${day.theme}</h3>
                     <ul class="mt-2 list-disc list-inside text-gray-700 space-y-1">
-                        ${day.activities.map(activity => `<li>${activity}</li>`).join('')}
+                        ${day.activities.map(activity => `
+                            <li>
+                                ${activity.name}
+                                ${activity.mapLink ? `<a href="${activity.mapLink}" target="_blank" class="ml-2 text-blue-500 hover:text-blue-700 text-sm">🌍 지도 보기</a>` : ''}
+                            </li>
+                        `).join('')}
                     </ul>
                     <p class="text-sm text-gray-500 mt-3">✨ <span class="font-semibold">Tip:</span> ${day.tip}</p>
                 `;
