@@ -42,14 +42,74 @@ function getTravelRecommendation(userData) {
   // 예시: 더미 데이터 생성 (MBTI 및 기간에 따라 간단히 조정)
   const itineraries = {
     'ENFP': [
-      { theme: "새로운 사람들과의 만남", activities: ["현지 펍 방문하기", "소셜 파티 참여", "플리마켓 구경하며 상인들과 대화하기"], tip: "예상치 못한 골목길 탐험이 행운을 가져다줄 거예요!" },
-      { theme: "창의적 영감 탐색", activities: ["현대 미술관 방문", "거리 예술 투어", "독특한 컨셉의 카페에서 아이디어 스케치"], tip: "여행지의 색감과 소리를 기록해보세요." },
-      { theme: "자유로운 휴식", activities: ["해변에서 자유롭게 일광욕", "공원 벤치에서 사람들 구경하기", "계획 없이 대중교통 타고 종점까지 가보기"], tip: "마음 가는 대로, 발길 닿는 대로 움직이는 하루!" },
+      {
+        theme: "파리 예술과 낭만 탐험",
+        activities: [
+          { name: "에펠탑 야경 감상", mapLink: "https://www.google.com/maps/search/?api=1&query=에펠탑" },
+          { name: "루브르 박물관 관람", mapLink: "https://www.google.com/maps/search/?api=1&query=루브르박물관" },
+          { name: "몽마르뜨 언덕과 사크레쾨르 대성당", mapLink: "https://www.google.com/maps/search/?api=1&query=몽마르뜨언덕" },
+          { name: "세느강 유람선 타기", mapLink: "https://www.google.com/maps/search/?api=1&query=세느강유람선" },
+          { name: "마레 지구 쇼핑 및 카페", mapLink: "https://www.google.com/maps/search/?api=1&query=파리마레지구" }
+        ],
+        tip: "파리의 골목길을 거닐며 예상치 못한 예술적 영감을 찾아보세요!"
+      },
+      {
+        theme: "도쿄의 활기찬 문화와 미식",
+        activities: [
+          { name: "시부야 스크램블 교차로 체험", mapLink: "https://www.google.com/maps/search/?api=1&query=시부야스크램블교차로" },
+          { name: "신주쿠 오모이데요코초 골목 탐방", mapLink: "https://www.google.com/maps/search/?api=1&query=신주쿠오모이데요코초" },
+          { name: "아사쿠사 센소지 사원 방문", mapLink: "https://www.google.com/maps/search/?api=1&query=아사쿠사센소지" },
+          { name: "하라주쿠 다케시타 거리 쇼핑", mapLink: "https://www.google.com/maps/search/?api=1&query=하라주쿠다케시타거리" },
+          { name: "츠키지 장외시장 미식 투어", mapLink: "https://www.google.com/maps/search/?api=1&query=츠키지장외시장" }
+        ],
+        tip: "도쿄의 다채로운 매력을 경험하며 새로운 자극을 느껴보세요!"
+      },
+      {
+        theme: "뉴욕의 에너지와 문화 충전",
+        activities: [
+          { name: "타임스퀘어 야경 감상", mapLink: "https://www.google.com/maps/search/?api=1&query=타임스퀘어" },
+          { name: "센트럴 파크 산책 및 피크닉", mapLink: "https://www.google.com/maps/search/?api=1&query=센트럴파크" },
+          { name: "브로드웨이 뮤지컬 관람", mapLink: "https://www.google.com/maps/search/?api=1&query=브로드웨이" },
+          { name: "메트로폴리탄 미술관 방문", mapLink: "https://www.google.com/maps/search/?api=1&query=메트로폴리탄미술관" },
+          { name: "브루클린 브릿지 걷기", mapLink: "https://www.google.com/maps/search/?api=1&query=브루클린브릿지" }
+        ],
+        tip: "뉴욕의 끊임없는 에너지 속에서 당신만의 영감을 찾아보세요."
+      }
     ],
     'ISTJ': [
-      { theme: "역사와 전통 탐방", activities: ["국립 박물관 방문", "유서 깊은 건축물 답사", "전통 시장 둘러보기"], tip: "방문할 장소의 역사를 미리 공부해가면 재미가 두 배!" },
-      { theme: "짜임새 있는 미식 투어", activities: ["미슐랭 가이드 맛집 방문 (사전 예약 필수)", "유명 베이커리 대표 메뉴 맛보기", "지역 특산주 시음"], tip: "동선을 고려해 효율적인 맛집 코스를 계획하세요." },
-      { theme: "편안하고 안락한 휴식", activities: ["조용한 도서관에서 책 읽기", "전망 좋은 곳에서 차 마시기", "스파에서 피로 풀기"], tip: "익숙하고 편안한 활동이 최고의 재충전을 선사합니다." },
+      {
+        theme: "로마 고대 유적과 역사 탐방",
+        activities: [
+          { name: "콜로세움 및 포로 로마노 탐방", mapLink: "https://www.google.com/maps/search/?api=1&query=콜로세움" },
+          { name: "바티칸 시국 및 성 베드로 대성당", mapLink: "https://www.google.com/maps/search/?api=1&query=바티칸시국" },
+          { name: "판테온 방문", mapLink: "https://www.google.com/maps/search/?api=1&query=판테온" },
+          { name: "트레비 분수 동전 던지기", mapLink: "https://www.google.com/maps/search/?api=1&query=트레비분수" },
+          { name: "보르게세 미술관 관람 (사전 예약)", mapLink: "https://www.google.com/maps/search/?api=1&query=보르게세미술관" }
+        ],
+        tip: "로마의 방대한 역사를 체계적으로 탐험하며 깊은 지식을 얻으세요!"
+      },
+      {
+        theme: "교토 전통 문화와 정원 기행",
+        activities: [
+          { name: "금각사 (킨카쿠지) 방문", mapLink: "https://www.google.com/maps/search/?api=1&query=금각사" },
+          { name: "후시미 이나리 신사 천 개의 토리이", mapLink: "https://www.google.com/maps/search/?api=1&query=후시미이나리신사" },
+          { name: "아라시야마 대나무 숲 산책", mapLink: "https://www.google.com/maps/search/?api=1&query=아라시야마대나무숲" },
+          { name: "기요미즈데라 (청수사) 관람", mapLink: "https://www.google.com/maps/search/?api=1&query=기요미즈데라" },
+          { name: "니조성 방문 및 역사 학습", mapLink: "https://www.google.com/maps/search/?api=1&query=니조성" }
+        ],
+        tip: "교토의 고즈넉한 아름다움 속에서 질서 정연한 평온함을 느껴보세요."
+      },
+      {
+        theme: "베를린 역사와 현대 예술 탐방",
+        activities: [
+          { name: "브란덴부르크 문 방문", mapLink: "https://www.google.com/maps/search/?api=1&query=브란덴부르크문" },
+          { name: "베를린 장벽 기념관", mapLink: "https://www.google.com/maps/search/?api=1&query=베를린장벽기념관" },
+          { name: "박물관 섬 (페르가몬 박물관 등)", mapLink: "https://www.google.com/maps/search/?api=1&query=박물관섬베를린" },
+          { name: "체크포인트 찰리 방문", mapLink: "https://www.google.com/maps/search/?api=1&query=체크포인트찰리" },
+          { name: "국회의사당 돔 관람 (사전 예약)", mapLink: "https://www.google.com/maps/search/?api=1&query=베를린국회의사당" }
+        ],
+        tip: "베를린의 복잡한 역사를 깊이 이해하고 현대 예술의 정수를 경험하세요."
+      }
     ]
   };
 
@@ -60,7 +120,7 @@ function getTravelRecommendation(userData) {
   recommendedItinerary = recommendedItinerary.slice(0, durationDays);
   if (recommendedItinerary.length < durationDays) {
     for(let i = recommendedItinerary.length; i < durationDays; i++) {
-         recommendedItinerary.push({ theme: "자유 시간 및 쇼핑", activities: ["기념품 가게 방문", "현지 대형마트 구경", "자유롭게 도시 산책"], tip: "남은 예산으로 소중한 사람들을 위한 선물을 골라보세요." });
+         recommendedItinerary.push({ theme: "자유 시간 및 쇼핑", activities: [{name: "현지 시장 구경", mapLink: ""}, {name: "기념품 쇼핑", mapLink: ""}, {name: "자유롭게 도시 산책", mapLink: ""}], tip: "남은 예산으로 소중한 사람들을 위한 선물을 골라보세요." });
     }
   }
 
